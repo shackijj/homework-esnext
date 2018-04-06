@@ -13,13 +13,13 @@
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
  * @function fetch
- * @param {url|Request}
+ * @param {string|Request}
  * @return {Promise}
  */
 
 /**
  * @function fetchSequence
- * @param {string} url
+ * @param {string|Request} url
  * @param {resolveCallback} resolve
  * @param {rejectCallback} reject
  * @param {function(): Promise} fetch
@@ -33,6 +33,7 @@ function fetchSequence (url, resolve, reject, fetch = window && window.fetch) {
       /**
        * We pass a new copy of results array in order
        * to avoid modification of the original array.
+       * That's why we call results.slice(), instead of passing results
        */
       resolve(response, results.slice())
     }
@@ -49,7 +50,12 @@ function fetchSequence (url, resolve, reject, fetch = window && window.fetch) {
               nextResolve(response, results.slice())
             }
           }
-          const nextPromise = nextFetch(nextUrl).then(onNextResolve, nextReject)
+          const onNextReject = (error) => {
+            if (nextReject) {
+              nextReject(error, results.slice())
+            }
+          }
+          const nextPromise = nextFetch(nextUrl).then(onNextResolve, onNextReject)
           promises.push(nextPromise)
         })
       return this

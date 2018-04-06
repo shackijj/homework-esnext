@@ -1,37 +1,49 @@
 const fetchSequence = require('./fetchSequence')
 
 describe('fetchSequence', () => {
-  describe('#get', () => {
-    describe('given that url, onResolve and onReject are passed', () => {
-      let url = 'someUrl'
-      let onReject
-      let onResolve
-      let requestStub
+  describe('given that url, onResolve and onReject are passed', () => {
+    let url = 'someUrl'
+    let onReject
+    let onResolve
+    let requestStub
 
-      beforeEach((done) => {
-        const callDone = () => done()
-        onResolve = jest.fn(callDone)
-        onReject = jest.fn(callDone)
-        fetchSequence(url, onResolve, onReject, requestStub)
+    beforeEach((done) => {
+      const callDone = () => done()
+      onResolve = jest.fn(callDone)
+      onReject = jest.fn(callDone)
+      fetchSequence(url, onResolve, onReject, requestStub)
+    })
+
+    describe('given that request succeed', () => {
+      beforeAll(() => {
+        requestStub = () => Promise.resolve(42)
       })
-
-      describe('given that request succeed', () => {
-        beforeAll(() => {
-          requestStub = () => Promise.resolve(42)
-        })
-        it('will call onResolve once', () => {
-          expect(onResolve).toHaveBeenCalledTimes(1)
-        })
-        it('will call onResolve with result', () => {
-          expect(onResolve).toBeCalledWith(42, [42])
-        })
-        it('will not onReject with result', () => {
-          expect(onReject).not.toBeCalled()
-        })
+      it('will call onResolve once', () => {
+        expect(onResolve).toHaveBeenCalledTimes(1)
+      })
+      it('will call onResolve with result', () => {
+        expect(onResolve).toBeCalledWith(42, [42])
+      })
+      it('will not onReject with result', () => {
+        expect(onReject).not.toBeCalled()
       })
     })
 
-    describe('given that get was called twice', () => {
+    describe('given that request failed', () => {
+      beforeAll(() => {
+        requestStub = () => Promise.reject(new Error(42))
+      })
+      it('will not call onResolve', () => {
+        expect(onResolve).toHaveBeenCalledTimes(0)
+      })
+      it('will call onReject once', () => {
+        expect(onReject).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe('#next', () => {
+    describe('given that next was called once', () => {
       let url = 'someUrl'
       let onReject1
       let onResolve1
@@ -67,6 +79,23 @@ describe('fetchSequence', () => {
           })
           it(`will call onResolve2 with the array where the first arg is result of previous request and the second is an array which contains results of previous calls`, () => {
             expect(onResolve2).toHaveBeenCalledWith(2, [1, 2])
+          })
+        })
+
+        describe('given that second request failed', () => {
+          let error = new Error(32)
+          beforeAll(() => {
+            requestStub1 = () => Promise.resolve(1)
+            requestStub2 = () => Promise.reject(error)
+          })
+          it('will call onResolve1 once', () => {
+            expect(onResolve1).toHaveBeenCalledTimes(1)
+          })
+          it(`will call onResolve1 with the result of that's request`, () => {
+            expect(onResolve1).toHaveBeenCalledWith(1, [1])
+          })
+          it(`will call onReject. The first arg is result of previous request and the second is an array which contains results of previous calls`, () => {
+            expect(onReject2).toHaveBeenCalledWith(error, [1])
           })
         })
       })
