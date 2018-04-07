@@ -9,9 +9,10 @@
     <title></title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="src/fetchSequence"></script>
+    <script src="dist/fetch-sequence.js"></script>
   </head>
   <body>
+    <div class="results"></div>
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
@@ -19,7 +20,11 @@
       fetchSequence('https://jsonplaceholder.typicode.com/posts/1')
         .next('https://jsonplaceholder.typicode.com/posts/2')
         .next('https://jsonplaceholder.typicode.com/posts/3', function(r3, responses) {
-          console.log(responses.length)
+          const promises = responses.map((response) => response.text())
+          Promise.all(promises).then((texts) => {
+            const markup = texts.map((text) => `<div>${text}</div>`).join('')
+            document.querySelector('.results').innerHTML = markup
+          })
         })
     </script>
   </body>
