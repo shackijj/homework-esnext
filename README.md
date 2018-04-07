@@ -38,8 +38,8 @@
 
 | Param | Type |
 | --- | --- |
-| response | <code>\*</code> | 
-| responses | <code>Array</code> | 
+| response | <code>Response</code> | 
+| responses | <code>Array.&lt;Response&gt;</code> | 
 
 <a name="rejectCallback"></a>
 
