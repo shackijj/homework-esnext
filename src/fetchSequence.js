@@ -12,18 +12,19 @@
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
- * @function fetch
+ * @callback fetch
  * @param {string|Request}
  * @return {Promise}
  */
 
 /**
+ * Функция делает последовательные запросы используя Fetch API
  * @function fetchSequence
  * @param {string|Request} url
- * @param {resolveCallback} resolve
- * @param {rejectCallback} reject
- * @param {function(): Promise} fetch
- * @param {{next: fetchSequence}}
+ * @param {resolveCallback=} resolve
+ * @param {rejectCallback=} reject
+ * @param {fetch=} fetch
+ * @return {{next: fetchSequence}}
  */
 function fetchSequence (url, resolve, reject, fetch = window && window.fetch) {
   const results = []
