@@ -132,7 +132,11 @@ describe('fetchSequence', () => {
                 setTimeout(() => resolve(1), 10)
               })
             })
-            requestStub2 = jest.fn(() => Promise.resolve(2))
+            requestStub2 = jest.fn(() => {
+              return new Promise((resolve) => {
+                setTimeout(() => resolve(1), 20)
+              })
+            })
             requestStub3 = jest.fn(() => Promise.resolve(3))
           })
           it('will call requestStub1 with url1', () => {
