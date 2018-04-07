@@ -1,7 +1,7 @@
 /**
  * @callback resolveCallback
- * @param {*} response
- * @param {Array} responses
+ * @param {Response} response
+ * @param {Response[]} responses
  * @return {void}
  */
 
@@ -28,6 +28,7 @@
  */
 function fetchSequence (url, resolve, reject, fetch = window && window.fetch) {
   const results = []
+  const tasks = []
   const onResolve = (response) => {
     results.push(response)
     if (resolve) {
@@ -39,26 +40,34 @@ function fetchSequence (url, resolve, reject, fetch = window && window.fetch) {
       resolve(response, results.slice())
     }
   }
-  const promise = fetch(url).then(onResolve, reject)
-  const promises = [promise]
+
+  const onTaskDone = () => {
+    const task = tasks.shift()
+    if (!task) {
+      return
+    }
+    const [nextUrl, nextResolve, nextReject, nextFetch = fetch] = task
+    const onNextResolve = (response) => {
+      results.push(response)
+      if (nextResolve) {
+        nextResolve(response, results.slice())
+      }
+    }
+    const onNextReject = (error) => {
+      if (nextReject) {
+        nextReject(error, results.slice())
+      }
+    }
+    nextFetch(nextUrl)
+      .then(onNextResolve, onNextReject)
+      .then(onTaskDone)
+  }
+
+  fetch(url).then(onResolve, reject).then(onTaskDone)
+
   return {
-    next (nextUrl, nextResolve, nextReject, nextFetch = fetch) {
-      Promise.all(promises)
-        .then(() => {
-          const onNextResolve = (response) => {
-            results.push(response)
-            if (nextResolve) {
-              nextResolve(response, results.slice())
-            }
-          }
-          const onNextReject = (error) => {
-            if (nextReject) {
-              nextReject(error, results.slice())
-            }
-          }
-          const nextPromise = nextFetch(nextUrl).then(onNextResolve, onNextReject)
-          promises.push(nextPromise)
-        })
+    next (...args) {
+      tasks.push(args)
       return this
     }
   }
